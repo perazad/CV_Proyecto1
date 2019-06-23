@@ -12,24 +12,6 @@ using namespace cv;
 using namespace cv::xfeatures2d;
 using namespace std;
 
-string ToUpperCase(char *word) {
-
-	char *wordUC = new char[strlen(word)];
-	
-
-	for (int i = 0; i < strlen(word); i++)
-	{
-		
-        wordUC[i] = (char)toupper(word[i]);
-
-	}
-
-	string rtnStr(wordUC);
-
-	return rtnStr;
-
-}
-
 
 int main(int argc, char* argv[])
 {
@@ -43,6 +25,7 @@ int main(int argc, char* argv[])
 
 	bool surf = true;
 	bool sift = false;
+	
 
 	Mat frame;
 	Mat img;
@@ -54,11 +37,11 @@ int main(int argc, char* argv[])
 	//Parameters validation
 	if(argc > 1) {
 
-		if(ToUpperCase(argv[1]) == "-I") {
+		string inic(argv[1]);
+
+		if(inic == "-I" || inic == "-i" ) {
 			image = true;
 			roi = false;
-
-			printf("if(ToUpperCase(argv[1]) == -I)\n");
 
 			if(argc <= 2) {
 				printf("Please specify image name with proper extension after parameter -i or -I\n");
@@ -66,7 +49,9 @@ int main(int argc, char* argv[])
 			}
 			else if(argc > 2) {
 
-				if(ToUpperCase(argv[3]) == "-V") {
+				string source(argv[3]);
+
+				if(source == "-V" || source == "-v") {
 					video = true;
 					camera = false;
 
@@ -75,12 +60,14 @@ int main(int argc, char* argv[])
 						return -1;
 					}
 					else if(argc > 4) {
+
+						string method(argv[5]);
 						
-						if(ToUpperCase(argv[5]) == "-SU") {
+						if(method == "-SU" || method == "-su") {
 							surf = true;
 							sift = false;							
 						}
-						else if(ToUpperCase(argv[5]) == "-SI"){
+						else if(method == "-SI" || method == "-si"){
 							sift = true;
 							surf = false;
 						}
@@ -92,15 +79,17 @@ int main(int argc, char* argv[])
 					}
 	
 				}//if(ToUpperCase(argv[3]) == "-V")
-				else if(ToUpperCase(argv[3]) == "-C") {
+				else if(source  == "-C" || source  == "-c") {
 					camera = true;
 					video = false;
 
-					if(ToUpperCase(argv[4]) == "-SU") {
+					string method(argv[4]);
+
+					if(method == "-SU" || method == "-su") {
 							surf = true;
 							sift = false;							
 					}
-					else if(ToUpperCase(argv[4]) == "-SI"){
+					else if(method == "-SI" || method == "-si"){
 						sift = true;
 						surf = false;
 					}
@@ -114,13 +103,15 @@ int main(int argc, char* argv[])
 			}//else if(argc > 2)
 
 		}//if(ToUpperCase(argv[1]) == "-I")
-		else if(ToUpperCase(argv[1]) == "-R") {
+		else if(inic == "-R" || inic == "-r") {
 			roi = true;
 			image = false;
 
 			if(argc > 2) {
 
-				if(ToUpperCase(argv[2]) == "-V") {
+				string source(argv[2]);
+
+				if(source == "-V" || source == "-v") {
 					video = true;
 					camera = false;
 
@@ -129,12 +120,14 @@ int main(int argc, char* argv[])
 						return -1;
 					}
 					else if(argc > 3) {
+
+						string method(argv[4]);
 						
-						if(ToUpperCase(argv[4]) == "-SU") {
+						if(method == "-SU" || method == "-su") {
 							surf = true;
 							sift = false;							
 						}
-						else if(ToUpperCase(argv[4]) == "-SI"){
+						else if(method == "-SI" || method == "-si"){
 							sift = true;
 							surf = false;
 						}
@@ -146,15 +139,17 @@ int main(int argc, char* argv[])
 					}
 					
 				}//if(ToUpperCase(argv[2]) == "-V")
-				else if(ToUpperCase(argv[2]) == "-C") {
+				else if(source == "-C" || source == "-c") {
 					camera = true;
 					video = false;
 
-					if(ToUpperCase(argv[3]) == "-SU") {
+					string method(argv[3]);
+
+					if(method == "-SU" || method == "-su") {
 							surf = true;
 							sift = false;							
 					}
-					else if(ToUpperCase(argv[3]) == "-SI"){
+					else if(method == "-SI" || method == "-si"){
 						sift = true;
 						surf = false;
 					}
@@ -173,8 +168,10 @@ int main(int argc, char* argv[])
 
 	if(camera)
     	cap = VideoCapture(0); // open the default camera
-	else
+	else if(image)
 		cap = VideoCapture(argv[4]);
+	else
+		cap = VideoCapture(argv[3]);
     
 	if(!cap.isOpened())  // check if we succeeded
         return -1;

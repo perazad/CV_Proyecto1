@@ -241,7 +241,7 @@ int main(int argc, char* argv[])
 		if(surf)
   			detectorSurf2->detectAndCompute(frame, noArray(), keyPoints2, descriptor2);
 		else if(sift)
-			detectorSift2->detectAndCompute(img, noArray(), keyPoints2, descriptor2);
+			detectorSift2->detectAndCompute(frame, noArray(), keyPoints2, descriptor2);
 
   		//-- Draw keypoints
   		Mat imgKeyPoints2;

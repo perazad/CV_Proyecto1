@@ -25,13 +25,19 @@ int main(int argc, char* argv[])
 
 	bool surf = true;
 	bool sift = false;
-	
+	bool akaze = false;
+	bool kaze = false;	
 
 	Mat frame;
 	Mat img;
 
+	Ptr<DescriptorMatcher> matcherFLANN;
+	BFMatcher matcherBF(NORM_HAMMING);
+
 	printf("This program performs a feature point tracking using an image (-i or -I) or region of interest (-r or -R) - default as baseline.\n");
 	printf("The program can run on a video (-v or -V) or using captures from webcam (-c or -C) - default.\n");
+	printf("The program use sevaral feature descriptors like: surf (-su or -SU) - default, sift (-si or -SI), akaze (-ak or -AK) and kaze (-kz or -KZ).\n");
+	printf("Parameters must be send in order when program is executed.\n"); 
     printf("Press q in image window for exit.\n");
 
 	//Parameters validation
@@ -65,14 +71,24 @@ int main(int argc, char* argv[])
 						
 						if(method == "-SU" || method == "-su") {
 							surf = true;
-							sift = false;							
+							sift = false;	
+							akaze = false;
+							kaze = false;						
 						}
 						else if(method == "-SI" || method == "-si"){
 							sift = true;
 							surf = false;
+							akaze = false;
+							kaze = false;	
+						}
+						else if(method == "-AK" || method == "-ak"){
+							akaze = true;
+							surf = false;
+							sift = false;
+							kaze = false;	
 						}
 						else {
-							printf("Please introduce a valid feature detector and descriptor to use: SURF (-su or SU), SIFT (-si or -SI)");
+							printf("Please introduce a valid feature detector and descriptor to use: SURF (-su or SU), SIFT (-si or -SI), AKANE (-ak or -AK)\n");
 							return -1;
 						}
 					
@@ -87,14 +103,24 @@ int main(int argc, char* argv[])
 
 					if(method == "-SU" || method == "-su") {
 							surf = true;
-							sift = false;							
+							sift = false;
+							akaze = false;
+							kaze = false;								
 					}
 					else if(method == "-SI" || method == "-si"){
 						sift = true;
 						surf = false;
+						akaze = false;
+						kaze = false;	
+					}
+					else if(method == "-AK" || method == "-ak"){
+							akaze = true;
+							surf = false;
+							sift = false;
+							kaze = false;	
 					}
 					else {
-						printf("Please introduce a valid feature detector and descriptor to use: SURF (-su or SU), SIFT (-si or -SI)");
+						printf("Please introduce a valid feature detector and descriptor to use: SURF (-su or SU), SIFT (-si or -SI), AKAZE (-ak or -AK)\n");
 						return -1;
 					}
 
@@ -125,14 +151,24 @@ int main(int argc, char* argv[])
 						
 						if(method == "-SU" || method == "-su") {
 							surf = true;
-							sift = false;							
+							sift = false;	
+							akaze = false;
+							kaze = false;						
 						}
 						else if(method == "-SI" || method == "-si"){
 							sift = true;
 							surf = false;
+							akaze = false;
+							kaze = false;
+						}
+						else if(method == "-AK" || method == "-ak"){
+							akaze = true;
+							surf = false;
+							sift = false;
+							kaze = false;	
 						}
 						else {
-							printf("Please introduce a valid feature detector and descriptor to use: SURF (-su or SU), SIFT (-si or -SI)");
+							printf("Please introduce a valid feature detector and descriptor to use: SURF (-su or SU), SIFT (-si or -SI), AKAZE (-ak or -AK)\n");
 							return -1;
 						}
 
@@ -147,14 +183,24 @@ int main(int argc, char* argv[])
 
 					if(method == "-SU" || method == "-su") {
 							surf = true;
-							sift = false;							
+							sift = false;
+							akaze = false;
+							kaze = false;							
 					}
 					else if(method == "-SI" || method == "-si"){
 						sift = true;
 						surf = false;
+						akaze = false;
+						kaze = false;
+					}
+					else if(method == "-AK" || method == "-ak"){
+							akaze = true;
+							surf = false;
+							sift = false;
+							kaze = false;	
 					}
 					else {
-						printf("Please introduce a valid feature detector and descriptor to use: SURF (-su or SU), SIFT (-si or -SI)");
+						printf("Please introduce a valid feature detector and descriptor to use: SURF (-su or SU), SIFT (-si or -SI), AKAZE (-AK or -ak");
 						return -1;
 					}
 				}//else if(ToUpperCase(argv[2]) == "-C")
@@ -201,6 +247,7 @@ int main(int argc, char* argv[])
 
   	Ptr<SURF> detectorSurf = SURF::create(minHessian);
 	Ptr<SIFT> detectorSift = SIFT::create(minHessian);
+	Ptr<AKAZE> detectorAkaze = AKAZE::create();
 
   	vector<KeyPoint> keyPoints;
 	Mat descriptor;
@@ -209,23 +256,17 @@ int main(int argc, char* argv[])
   		detectorSurf->detectAndCompute(img, noArray(), keyPoints, descriptor);
 	else if(sift)
 		detectorSift->detectAndCompute(img, noArray(), keyPoints, descriptor);
+	else if(akaze)
+		detectorAkaze->detectAndCompute(img, noArray(), keyPoints, descriptor);
+
 
   	//-- Draw keypoints
   	Mat imgKeyPoints;
 
-
-	if (surf)
-  		drawKeypoints(img, keyPoints, imgKeyPoints, Scalar::all(-1), DrawMatchesFlags::DEFAULT); 
-	else if(sift)
-		drawKeypoints(img, keyPoints, imgKeyPoints, Scalar::all(-1), DrawMatchesFlags::DEFAULT); 
+	drawKeypoints(img, keyPoints, imgKeyPoints, Scalar::all(-1), DrawMatchesFlags::DEFAULT); 
 
   	//-- Show detected (drawn) keypoints
-	if (surf)
-  		imshow("Keypoints with SURF", imgKeyPoints);
-	else if(sift)
-		imshow("Keypoints with SIFT", imgKeyPoints);
-
-	
+  	imshow("Keypoints used", imgKeyPoints);	
 
     for(;;)
     {
@@ -234,6 +275,7 @@ int main(int argc, char* argv[])
 	
 		Ptr<SURF> detectorSurf2 = SURF::create(minHessian);
 		Ptr<SIFT> detectorSift2 = SIFT::create(minHessian);
+		Ptr<AKAZE> detectorAkaze2 = AKAZE::create();
 
 		vector<KeyPoint> keyPoints2;
 		Mat descriptor2;
@@ -242,20 +284,26 @@ int main(int argc, char* argv[])
   			detectorSurf2->detectAndCompute(frame, noArray(), keyPoints2, descriptor2);
 		else if(sift)
 			detectorSift2->detectAndCompute(frame, noArray(), keyPoints2, descriptor2);
+		else if(akaze)
+			detectorAkaze2->detectAndCompute(frame, noArray(), keyPoints2, descriptor2);
 
   		//-- Draw keypoints
   		Mat imgKeyPoints2;
 
-		if(surf)
-  			drawKeypoints(frame, keyPoints2, imgKeyPoints2, Scalar::all(-1), DrawMatchesFlags::DEFAULT); 
-		else if(sift)
-			drawKeypoints(frame, keyPoints2, imgKeyPoints2, Scalar::all(-1), DrawMatchesFlags::DEFAULT); 
+  		drawKeypoints(frame, keyPoints2, imgKeyPoints2, Scalar::all(-1), DrawMatchesFlags::DEFAULT);
 
-		//-- Step 2: Matching descriptor vectors with a FLANN based matcher
-    	// Since SURF is a floating-point descriptor NORM_L2 is used
-    	Ptr<DescriptorMatcher> matcher = DescriptorMatcher::create(DescriptorMatcher::FLANNBASED);
+		if(surf || sift) {
+			//-- Step 2: Matching descriptor vectors with a FLANN based matcher
+    		// Since SURF and SIFT is a floating-point descriptor NORM_L2 is used
+    		matcherFLANN = DescriptorMatcher::create(DescriptorMatcher::FLANNBASED);
+		}
+	
     	vector< std::vector<DMatch> > knn_matches;
-    	matcher->knnMatch(descriptor, descriptor2, knn_matches, 2 );
+
+		if(surf || sift)
+    		matcherFLANN->knnMatch(descriptor, descriptor2, knn_matches, 2);
+		else
+			matcherBF.knnMatch(descriptor, descriptor2, knn_matches, 2);
 
 		//-- Filter matches using the Lowe's ratio test
     	const float ratio_thresh = 0.7f;

@@ -2,6 +2,9 @@
 #include <ctype.h>
 #include <iostream>
 #include <string>
+#include <opencv2/core/utility.hpp>
+#include <opencv2/tracking.hpp>
+#include <opencv2/videoio.hpp>
 #include "opencv2/opencv.hpp"
 #include "opencv2/core.hpp"
 #include "opencv2/features2d.hpp"

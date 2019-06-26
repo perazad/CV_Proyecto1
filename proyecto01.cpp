@@ -32,14 +32,14 @@ int main(int argc, char* argv[])
 	bool kaze = false;	
 
 	Mat frame;
-	Mat img;
+	Mat imgObj;
 
 	Ptr<DescriptorMatcher> matcherFLANN;
 	BFMatcher matcherBF(NORM_HAMMING);
 
 	printf("This program performs a feature point tracking using an image (-i or -I) or region of interest (-r or -R) - default as baseline.\n");
 	printf("The program can run on a video (-v or -V) or using captures from webcam (-c or -C) - default.\n");
-	printf("The program use sevaral feature descriptors like: surf (-su or -SU) - default, sift (-si or -SI), akaze (-ak or -AK) and kaze (-kz or -KZ).\n");
+	printf("The program use sevaral feature descriptors like: surf (-su or -SU) - default, sift (-si or -SI), akaze (-ak or -AK).\n");
 	printf("Parameters must be send in order when program is executed.\n"); 
     printf("Press q in image window for exit.\n");
 
@@ -90,6 +90,12 @@ int main(int argc, char* argv[])
 							sift = false;
 							kaze = false;	
 						}
+						/*else if(method == "-KZ" || method == "-kz"){
+							kaze = true;
+							surf = false;
+							sift = false;
+							akaze = false;	
+						}*/
 						else {
 							printf("Please introduce a valid feature detector and descriptor to use: SURF (-su or SU), SIFT (-si or -SI), AKANE (-ak or -AK)\n");
 							return -1;
@@ -122,6 +128,12 @@ int main(int argc, char* argv[])
 							sift = false;
 							kaze = false;	
 					}
+					/*else if(method == "-KZ" || method == "-kz"){
+							kaze = true;
+							surf = false;
+							sift = false;
+							akaze = false;	
+					}*/
 					else {
 						printf("Please introduce a valid feature detector and descriptor to use: SURF (-su or SU), SIFT (-si or -SI), AKAZE (-ak or -AK)\n");
 						return -1;
@@ -170,6 +182,12 @@ int main(int argc, char* argv[])
 							sift = false;
 							kaze = false;	
 						}
+						/*else if(method == "-KZ" || method == "-kz"){
+							kaze = true;
+							surf = false;
+							sift = false;
+							akaze = false;	
+						}*/
 						else {
 							printf("Please introduce a valid feature detector and descriptor to use: SURF (-su or SU), SIFT (-si or -SI), AKAZE (-ak or -AK)\n");
 							return -1;
@@ -202,6 +220,12 @@ int main(int argc, char* argv[])
 							sift = false;
 							kaze = false;	
 					}
+					/*else if(method == "-KZ" || method == "-kz"){
+							kaze = true;
+							surf = false;
+							sift = false;
+							akaze = false;	
+					}*/
 					else {
 						printf("Please introduce a valid feature detector and descriptor to use: SURF (-su or SU), SIFT (-si or -SI), AKAZE (-AK or -ak");
 						return -1;
@@ -227,7 +251,7 @@ int main(int argc, char* argv[])
 
     //Mat edges;
 	if(image)
-		img = imread(argv[2], IMREAD_GRAYSCALE);
+		imgObj = imread(argv[2], IMREAD_GRAYSCALE);
 
 	if(roi) {
 		// Read first frame     
@@ -237,10 +261,10 @@ int main(int argc, char* argv[])
 		Rect2d bbox = selectROI(frame, false); 
 
 		//Crop image from frame
-		img = frame(bbox);
+		imgObj = frame(bbox);
 	}
 
-	if(!img.data) {
+	if(!imgObj.data) {
   		std::cout<< " --(!) Error reading image " << std::endl; 
 		return -1;
 	}
@@ -248,92 +272,173 @@ int main(int argc, char* argv[])
 	//-- Step 1: Detect the keypoints using SURF Detector
   	int minHessian = 400;
 
-  	Ptr<SURF> detectorSurf = SURF::create(minHessian);
-	Ptr<SIFT> detectorSift = SIFT::create(minHessian);
-	Ptr<AKAZE> detectorAkaze = AKAZE::create();
+  	Ptr<SURF> detectorSurfObj;
+	Ptr<SIFT> detectorSiftObj;
+	Ptr<AKAZE> detectorAkazeObj;
+	Ptr<KAZE> detectorKazeObj;
 
-  	vector<KeyPoint> keyPoints;
-	Mat descriptor;
+	if(surf)
+		detectorSurfObj = SURF::create(minHessian);
+	else if(sift)		
+		detectorSiftObj = SIFT::create(minHessian);
+	else if(akaze)		
+		detectorAkazeObj = AKAZE::create();
+	else if(kaze)	//Not working	
+		detectorKazeObj = KAZE::create();
+
+  	vector<KeyPoint> keyPointsObj;
+	Mat descriptorObj;
 
 	if (surf)
-  		detectorSurf->detectAndCompute(img, noArray(), keyPoints, descriptor);
+  		detectorSurfObj->detectAndCompute(imgObj, noArray(), keyPointsObj, descriptorObj);
 	else if(sift)
-		detectorSift->detectAndCompute(img, noArray(), keyPoints, descriptor);
+		detectorSiftObj->detectAndCompute(imgObj, noArray(), keyPointsObj, descriptorObj);
 	else if(akaze)
-		detectorAkaze->detectAndCompute(img, noArray(), keyPoints, descriptor);
+		detectorAkazeObj->detectAndCompute(imgObj, noArray(), keyPointsObj, descriptorObj);
+	else if(kaze)	//Not working
+		detectorKazeObj->detectAndCompute(imgObj, noArray(), keyPointsObj, descriptorObj);
 
 
   	//-- Draw keypoints
-  	Mat imgKeyPoints;
+  	Mat imgObjKeyPoints;
 
-	drawKeypoints(img, keyPoints, imgKeyPoints, Scalar::all(-1), DrawMatchesFlags::DEFAULT); 
+	drawKeypoints(imgObj, keyPointsObj, imgObjKeyPoints, Scalar::all(-1), DrawMatchesFlags::DEFAULT); 
+
+	Ptr<SURF> detectorSurfFrame;
+	Ptr<SIFT> detectorSiftFrame;
+	Ptr<AKAZE> detectorAkazeFrame;
+	Ptr<KAZE> detectorKazeFrame;
+
+	printf("Number of key points: %i\n", (int)keyPointsObj.size());
 
   	//-- Show detected (drawn) keypoints
-  	imshow("Keypoints used", imgKeyPoints);	
+  	imshow("Keypoints used", imgObjKeyPoints);	
 
-    for(;;)
-    {
-        Mat frame;
-        cap >> frame; // get a new frame from camera
+    for(;;) {
+
+		try	{
+
+			Mat frame;
+	        cap >> frame; // get a new frame from camera
 	
-		Ptr<SURF> detectorSurf2 = SURF::create(minHessian);
-		Ptr<SIFT> detectorSift2 = SIFT::create(minHessian);
-		Ptr<AKAZE> detectorAkaze2 = AKAZE::create();
+			if(surf)
+				detectorSurfFrame = SURF::create(minHessian);
+			else if(sift)		
+				detectorSiftFrame = SIFT::create(minHessian);
+			else if(akaze)		
+				detectorAkazeFrame = AKAZE::create();
+			else if(kaze)		
+				detectorKazeFrame = KAZE::create();
 
-		vector<KeyPoint> keyPoints2;
-		Mat descriptor2;
+			vector<KeyPoint> keyPointsFrame;
+			Mat descriptorFrame;
 
-		if(surf)
-  			detectorSurf2->detectAndCompute(frame, noArray(), keyPoints2, descriptor2);
-		else if(sift)
-			detectorSift2->detectAndCompute(frame, noArray(), keyPoints2, descriptor2);
-		else if(akaze)
-			detectorAkaze2->detectAndCompute(frame, noArray(), keyPoints2, descriptor2);
+			if(surf)
+	  			detectorSurfFrame->detectAndCompute(frame, noArray(), keyPointsFrame, descriptorFrame);
+			else if(sift)
+				detectorSiftFrame->detectAndCompute(frame, noArray(), keyPointsFrame, descriptorFrame);
+			else if(akaze)
+				detectorAkazeFrame->detectAndCompute(frame, noArray(), keyPointsFrame, descriptorFrame);
+			else if(kaze)
+				detectorKazeFrame->detectAndCompute(frame, noArray(), keyPointsFrame, descriptorFrame);
 
-  		//-- Draw keypoints
-  		Mat imgKeyPoints2;
+	  		//-- Draw keypoints
+	  		Mat imgFrameKeyPoints;
 
-  		drawKeypoints(frame, keyPoints2, imgKeyPoints2, Scalar::all(-1), DrawMatchesFlags::DEFAULT);
+	  		drawKeypoints(frame, keyPointsFrame, imgFrameKeyPoints, Scalar::all(-1), DrawMatchesFlags::DEFAULT);
 
-		if(surf || sift) {
-			//-- Step 2: Matching descriptor vectors with a FLANN based matcher
-    		// Since SURF and SIFT is a floating-point descriptor NORM_L2 is used
-    		matcherFLANN = DescriptorMatcher::create(DescriptorMatcher::FLANNBASED);
-		}
+			if(surf || sift) {
+				//-- Step 2: Matching descriptor vectors with a FLANN based matcher
+	    		// Since SURF and SIFT is a floating-point descriptor NORM_L2 is used
+	    		matcherFLANN = DescriptorMatcher::create(DescriptorMatcher::FLANNBASED);
+			}
 	
-    	vector< std::vector<DMatch> > knn_matches;
+	    	vector< std::vector<DMatch> > knnMatches;
 
-		if(surf || sift)
-    		matcherFLANN->knnMatch(descriptor, descriptor2, knn_matches, 2);
-		else
-			matcherBF.knnMatch(descriptor, descriptor2, knn_matches, 2);
+			if(surf || sift)
+	    		matcherFLANN->knnMatch(descriptorObj, descriptorFrame, knnMatches, 2);
+			else
+				matcherBF.knnMatch(descriptorObj, descriptorFrame, knnMatches, 2);
 
-		//-- Filter matches using the Lowe's ratio test
-    	const float ratio_thresh = 0.7f;
-    	vector<DMatch> good_matches;
-    	for (size_t i = 0; i < knn_matches.size(); i++)
-    	{
-    	    if (knn_matches[i][0].distance < ratio_thresh * knn_matches[i][1].distance)
-    	    {
-    	        good_matches.push_back(knn_matches[i][0]);
-    	    }
-    	}
-    	//-- Draw matches
-    	Mat img_matches;
-    	drawMatches(img, keyPoints, frame, keyPoints2, good_matches, img_matches, Scalar::all(-1),
-                 Scalar::all(-1), std::vector<char>(), DrawMatchesFlags::NOT_DRAW_SINGLE_POINTS );
-    	//-- Show detected matches
-    	imshow("Proyecto01: Puntos de interes", img_matches );
+			//-- Filter matches using the Lowe's ratio test
+	    	const float ratio_thresh = 0.75f;
+	    	vector<DMatch> goodMatches;
+	    	for (size_t i = 0; i < knnMatches.size(); i++) {
 
-        //cvtColor(frame, edges, COLOR_BGR2GRAY);
-        //GaussianBlur(edges, edges, Size(7,7), 1.5, 1.5);
-        //Canny(edges, edges, 0, 30, 3);
+	    	    if (knnMatches[i][0].distance < ratio_thresh * knnMatches[i][1].distance)
+	    	        goodMatches.push_back(knnMatches[i][0]);
+	    	   
+	    	}    	
 
-        //imshow("Proyecto01: Puntos de interes", frame);
-        if(waitKey(30) >= 0) break;
+			Mat imgMatches;
+
+			if(goodMatches.size() >= keyPointsObj.size() * 0.04) {
+
+		
+				//-- Draw matches    		
+				drawMatches(imgObj, keyPointsObj, frame, keyPointsFrame, goodMatches, imgMatches, Scalar::all(-1),
+                	 	Scalar::all(-1), std::vector<char>(), DrawMatchesFlags::NOT_DRAW_SINGLE_POINTS );
+		
+				//-- Localize the object
+    			std::vector<Point2f> obj;
+    			std::vector<Point2f> scene;
+
+    			for( size_t i = 0; i < goodMatches.size(); i++ ) {
+        			//-- Get the keypoints from the good matches
+        			obj.push_back( keyPointsObj[ goodMatches[i].queryIdx ].pt );
+        			scene.push_back( keyPointsFrame[ goodMatches[i].trainIdx ].pt );
+    			}
+    	
+				Mat H = findHomography(obj, scene, RANSAC);
+
+	    		//-- Get the corners from the image_1 ( the object to be "detected" )
+	    		std::vector<Point2f> objCorners(4);
+	    		objCorners[0] = Point2f(0, 0);
+	    		objCorners[1] = Point2f( (float)imgObj.cols, 0 );
+	    		objCorners[2] = Point2f( (float)imgObj.cols, (float)imgObj.rows );
+	    		objCorners[3] = Point2f( 0, (float)imgObj.rows );
+
+	    		std::vector<Point2f> sceneCorners(4);
+
+				if(!(H.empty())) {
+
+	    			perspectiveTransform(objCorners, sceneCorners, H);
+
+	    			//-- Draw lines between the corners (the mapped object in the scene - image_2 )
+	    			line(imgMatches, sceneCorners[0] + Point2f((float)imgObj.cols, 0),
+	    	    		  sceneCorners[1] + Point2f((float)imgObj.cols, 0), Scalar(0, 255, 0), 4 );
+	    			line(imgMatches, sceneCorners[1] + Point2f((float)imgObj.cols, 0),
+	    	    		  sceneCorners[2] + Point2f((float)imgObj.cols, 0), Scalar( 0, 255, 0), 4 );
+	    			line(imgMatches, sceneCorners[2] + Point2f((float)imgObj.cols, 0),
+	    	    		  sceneCorners[3] + Point2f((float)imgObj.cols, 0), Scalar( 0, 255, 0), 4 );
+	    			line(imgMatches, sceneCorners[3] + Point2f((float)imgObj.cols, 0),
+	    	    		  sceneCorners[0] + Point2f((float)imgObj.cols, 0), Scalar( 0, 255, 0), 4 );
+
+				}//if(!(H.empty())) ends
+
+			}//if(goodMatches.size() >= 4)
+			else
+				imgMatches = frame;
+
+    		//-- Show detected matches
+    		imshow("Proyecto01: Puntos de interes", imgMatches);
+
+        	//cvtColor(frame, edges, COLOR_BGR2GRAY);
+        	//GaussianBlur(edges, edges, Size(7,7), 1.5, 1.5);
+        	//Canny(edges, edges, 0, 30, 3);
+
+        	//imshow("Proyecto01: Puntos de interes", frame);
+        	if(waitKey(30) >= 0) break;
+
+		}//try ends
+		catch(int e)
+		{//catch begins
+
+			printf("Exception number: %i\n", e);
+
+		}//catch ends
+
     }
     // the camera will be deinitialized automatically in VideoCapture destructor
     return 0;
 }
-
-

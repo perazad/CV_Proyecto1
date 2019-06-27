@@ -427,8 +427,14 @@ int main(int argc, char* argv[])
         	//GaussianBlur(edges, edges, Size(7,7), 1.5, 1.5);
         	//Canny(edges, edges, 0, 30, 3);
 
+			char key = waitKey(10);
+
         	//imshow("Proyecto01: Puntos de interes", frame);
-        	if(waitKey(30) >= 0) break;
+        	if(key == 113 || key == 81 ) {
+				printf("Leaving loop!\n");
+				break;
+
+			}
 
 		}//try ends
 		catch(int e)

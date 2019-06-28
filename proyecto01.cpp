@@ -1,7 +1,16 @@
+//File Name: proyecto01.cpp
+//Authors: David Peraza and Guillermo Rodriguez
+//Date: 17/06/2019
+//Description: Proyecto1: Puntos de interes 
+//Course: Vision por computador - MSc - Cuatrimestre II - ITCR
+
+
+//APIs required
 #include <stdio.h>
 #include <ctype.h>
 #include <iostream>
 #include <string>
+#include <unistd.h>
 #include <opencv2/core/utility.hpp>
 #include <opencv2/tracking.hpp>
 #include <opencv2/videoio.hpp>
@@ -11,14 +20,20 @@
 #include "opencv2/xfeatures2d.hpp"
 #include "opencv2/highgui.hpp"
 
+
+//Namespaces used
 using namespace cv;
 using namespace cv::xfeatures2d;
 using namespace std;
 
+//Constants
+const bool RECORD = false;
 
+//main function
 int main(int argc, char* argv[])
 {
 
+	//Variables declaration
 	bool ok;
 	bool image = false;
 	bool roi = true;
@@ -31,15 +46,18 @@ int main(int argc, char* argv[])
 	bool akaze = false;
 	bool kaze = false;	
 
+	VideoWriter videoFile;	
+
 	Mat frame;
 	Mat imgObj;
 
 	Ptr<DescriptorMatcher> matcherFLANN;
 	BFMatcher matcherBF(NORM_HAMMING);
 
+	//Print to console
 	printf("This program performs a feature point tracking using an image (-i or -I) or region of interest (-r or -R) - default as baseline.\n");
 	printf("The program can run on a video (-v or -V) or using captures from webcam (-c or -C) - default.\n");
-	printf("The program use sevaral feature descriptors like: surf (-su or -SU) - default, sift (-si or -SI), akaze (-ak or -AK).\n");
+	printf("The program uses sevaral feature descriptors like: surf (-su or -SU) - default, sift (-si or -SI), akaze (-ak or -AK).\n");
 	printf("Parameters must be send in order when program is executed.\n"); 
     printf("Press q in image window for exit.\n");
 
@@ -48,6 +66,7 @@ int main(int argc, char* argv[])
 
 		string inic(argv[1]);
 
+		//Using an image as baseline
 		if(inic == "-I" || inic == "-i" ) {
 			image = true;
 			roi = false;
@@ -60,7 +79,7 @@ int main(int argc, char* argv[])
 
 				string source(argv[3]);
 
-				if(source == "-V" || source == "-v") {
+				if(source == "-V" || source == "-v") {	//using video as capture source
 					video = true;
 					camera = false;
 
@@ -104,7 +123,7 @@ int main(int argc, char* argv[])
 					}
 	
 				}//if(ToUpperCase(argv[3]) == "-V")
-				else if(source  == "-C" || source  == "-c") {
+				else if(source  == "-C" || source  == "-c") {	//using camera as capture source
 					camera = true;
 					video = false;
 
@@ -254,6 +273,10 @@ int main(int argc, char* argv[])
 		imgObj = imread(argv[2], IMREAD_GRAYSCALE);
 
 	if(roi) {
+
+		//Wait 15ms for camara light to turn on
+		usleep(15000);
+
 		// Read first frame     
     	ok = cap.read(frame); 
 
@@ -314,12 +337,41 @@ int main(int argc, char* argv[])
   	//-- Show detected (drawn) keypoints
   	imshow("Keypoints used", imgObjKeyPoints);	
 
+	// Default resolution of the frame is obtained.The default resolution is system dependent. 
+  	int frame_width = cap.get(CV_CAP_PROP_FRAME_WIDTH); 
+  	int frame_height = cap.get(CV_CAP_PROP_FRAME_HEIGHT); 
+   
+	if(RECORD) {
+  		// Define the codec and create VideoWriter object.The output is stored in '.avi' file. 
+  		videoFile = VideoWriter("test.avi", CV_FOURCC('M','J','P','G'), 10, Size(frame_width, frame_height)); 
+
+	}
+
     for(;;) {
 
 		try	{
 
 			Mat frame;
 	        cap >> frame; // get a new frame from camera
+
+			if(RECORD) {
+				// Write the frame into the test file .avi
+    			videoFile.write(frame);
+
+				//-- Show video frame
+    			imshow("Proyecto01: Puntos de interes", frame);
+
+				char key = waitKey(10);
+
+        		if(key == 113 || key == 81 ) {
+					printf("Leaving loop!\n");
+					break;
+
+				}
+
+				continue; //continue with next loop and skip feature matching code.
+
+			}//if(RECORD) begins
 	
 			if(surf)
 				detectorSurfFrame = SURF::create(minHessian);

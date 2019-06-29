@@ -1,5 +1,5 @@
 //File Name: proyecto01.cpp
-//Authors: David Peraza and Guillermo Rodriguez
+//Authors: David Peraza Gonzalez and Guillermo Rodriguez Obando
 //Date: 17/06/2019
 //Description: Proyecto1: Puntos de interes 
 //Course: Vision por computador - MSc - Cuatrimestre II - ITCR
@@ -11,6 +11,7 @@
 #include <iostream>
 #include <string>
 #include <unistd.h>
+#include <time.h>
 #include <opencv2/core/utility.hpp>
 #include <opencv2/tracking.hpp>
 #include <opencv2/videoio.hpp>
@@ -95,19 +96,22 @@ int main(int argc, char* argv[])
 							surf = true;
 							sift = false;	
 							akaze = false;
-							kaze = false;						
+							kaze = false;	
+							printf("Using surf algorithm!\n");					
 						}
 						else if(method == "-SI" || method == "-si"){
 							sift = true;
 							surf = false;
 							akaze = false;
-							kaze = false;	
+							kaze = false;
+							printf("Using sift algorithm!\n");	
 						}
 						else if(method == "-AK" || method == "-ak"){
 							akaze = true;
 							surf = false;
 							sift = false;
 							kaze = false;	
+							printf("Using akaze algorithm!\n");
 						}
 						/*else if(method == "-KZ" || method == "-kz"){
 							kaze = true;
@@ -133,19 +137,22 @@ int main(int argc, char* argv[])
 							surf = true;
 							sift = false;
 							akaze = false;
-							kaze = false;								
+							kaze = false;			
+							printf("Using surf algorithm!\n");					
 					}
 					else if(method == "-SI" || method == "-si"){
 						sift = true;
 						surf = false;
 						akaze = false;
 						kaze = false;	
+						printf("Using sift algorithm!\n");
 					}
 					else if(method == "-AK" || method == "-ak"){
 							akaze = true;
 							surf = false;
 							sift = false;
 							kaze = false;	
+							printf("Using akaze algorithm!\n");
 					}
 					/*else if(method == "-KZ" || method == "-kz"){
 							kaze = true;
@@ -187,19 +194,22 @@ int main(int argc, char* argv[])
 							surf = true;
 							sift = false;	
 							akaze = false;
-							kaze = false;						
+							kaze = false;	
+							printf("Using surf algorithm!\n");					
 						}
 						else if(method == "-SI" || method == "-si"){
 							sift = true;
 							surf = false;
 							akaze = false;
 							kaze = false;
+							printf("Using sift algorithm!\n");
 						}
 						else if(method == "-AK" || method == "-ak"){
 							akaze = true;
 							surf = false;
 							sift = false;
 							kaze = false;	
+							printf("Using akaze algorithm!\n");
 						}
 						/*else if(method == "-KZ" || method == "-kz"){
 							kaze = true;
@@ -225,19 +235,22 @@ int main(int argc, char* argv[])
 							surf = true;
 							sift = false;
 							akaze = false;
-							kaze = false;							
+							kaze = false;	
+							printf("Using surf algorithm!\n");						
 					}
 					else if(method == "-SI" || method == "-si"){
 						sift = true;
 						surf = false;
 						akaze = false;
 						kaze = false;
+						printf("Using sift algorithm!\n");
 					}
 					else if(method == "-AK" || method == "-ak"){
 							akaze = true;
 							surf = false;
 							sift = false;
 							kaze = false;	
+							printf("Using akaze algorithm!\n");
 					}
 					/*else if(method == "-KZ" || method == "-kz"){
 							kaze = true;
@@ -295,11 +308,13 @@ int main(int argc, char* argv[])
 	//-- Step 1: Detect the keypoints using SURF Detector
   	int minHessian = 400;
 
+	//Feature descriptors declaration
   	Ptr<SURF> detectorSurfObj;
 	Ptr<SIFT> detectorSiftObj;
 	Ptr<AKAZE> detectorAkazeObj;
 	Ptr<KAZE> detectorKazeObj;
 
+	//Features descriptors initialization
 	if(surf)
 		detectorSurfObj = SURF::create(minHessian);
 	else if(sift)		
@@ -312,12 +327,39 @@ int main(int argc, char* argv[])
   	vector<KeyPoint> keyPointsObj;
 	Mat descriptorObj;
 
-	if (surf)
+	//Compute key points per selected descriptor
+	if (surf) {
+
+		clock_t start, end;
+
+    	start = clock();
   		detectorSurfObj->detectAndCompute(imgObj, noArray(), keyPointsObj, descriptorObj);
-	else if(sift)
+		end = clock();
+
+		double difference = double(end-start) / CLOCKS_PER_SEC;
+		printf("Feature points execution time: %fs\n", difference);
+	}//if (surf) ends
+	else if(sift) {
+		clock_t start, end;
+
+    	start = clock();
 		detectorSiftObj->detectAndCompute(imgObj, noArray(), keyPointsObj, descriptorObj);
-	else if(akaze)
+		time (&end); // note time after execution
+
+		double difference = double(end-start) / CLOCKS_PER_SEC;
+		printf("Feature points execution time: %fs\n", difference);
+	}//else if(sift) ends
+	else if(akaze) {
+		clock_t start, end;
+
+    	start = clock();
 		detectorAkazeObj->detectAndCompute(imgObj, noArray(), keyPointsObj, descriptorObj);
+		time (&end); // note time after execution
+
+		double difference = double(end-start) / CLOCKS_PER_SEC;
+		printf("Feature points execution time: %fs\n", difference);
+
+	}
 	else if(kaze)	//Not working
 		detectorKazeObj->detectAndCompute(imgObj, noArray(), keyPointsObj, descriptorObj);
 
@@ -327,6 +369,7 @@ int main(int argc, char* argv[])
 
 	drawKeypoints(imgObj, keyPointsObj, imgObjKeyPoints, Scalar::all(-1), DrawMatchesFlags::DEFAULT); 
 
+	//Feature descriptor declaration for capture frames
 	Ptr<SURF> detectorSurfFrame;
 	Ptr<SIFT> detectorSiftFrame;
 	Ptr<AKAZE> detectorAkazeFrame;
@@ -341,12 +384,14 @@ int main(int argc, char* argv[])
   	int frame_width = cap.get(CV_CAP_PROP_FRAME_WIDTH); 
   	int frame_height = cap.get(CV_CAP_PROP_FRAME_HEIGHT); 
    
+	//Record a video for evaluation
 	if(RECORD) {
   		// Define the codec and create VideoWriter object.The output is stored in '.avi' file. 
   		videoFile = VideoWriter("test.avi", CV_FOURCC('M','J','P','G'), 10, Size(frame_width, frame_height)); 
 
 	}
 
+	//Infinite loop for continues capturing. Exit pressing key q or Q
     for(;;) {
 
 		try	{
@@ -407,6 +452,7 @@ int main(int argc, char* argv[])
 	
 	    	vector< std::vector<DMatch> > knnMatches;
 
+			//Feature matching using k nearist neighbor
 			if(surf || sift)
 	    		matcherFLANN->knnMatch(descriptorObj, descriptorFrame, knnMatches, 2);
 			else
@@ -424,6 +470,7 @@ int main(int argc, char* argv[])
 
 			Mat imgMatches;
 
+			//Aception just 4% > of key points as "valid" detection
 			if(goodMatches.size() >= keyPointsObj.size() * 0.04) {
 
 		
@@ -481,7 +528,8 @@ int main(int argc, char* argv[])
 
 			char key = waitKey(10);
 
-        	//imshow("Proyecto01: Puntos de interes", frame);
+ 
+			//keys q or Q for exit
         	if(key == 113 || key == 81 ) {
 				printf("Leaving loop!\n");
 				break;
@@ -496,7 +544,7 @@ int main(int argc, char* argv[])
 
 		}//catch ends
 
-    }
+    }//for(;;) ends
     // the camera will be deinitialized automatically in VideoCapture destructor
     return 0;
 }
